@@ -11,6 +11,11 @@ public class SniperRifleManager : MonoBehaviour
     public Animator shootAnim;
     float T = 0;
     float reloadTime = 1f;
+
+    [Space]
+    public float shootingSpeed;
+    public float gravityForce;
+    public float bulletLifeTime;
     
     void Update()
     {
@@ -54,5 +59,12 @@ public class SniperRifleManager : MonoBehaviour
         shootAnim.SetTrigger("Shoot");
 
         //Parabolic shoot code here
+        GameObject bullet = Instantiate(bulletPref, shootPoint.position, shootPoint.rotation);
+        ParabolicBullet bulletScript = bullet.GetComponent<ParabolicBullet>();
+        if (bulletScript)
+        {
+            bulletScript.Initialize(shootPoint, shootingSpeed, gravityForce);
+        }
+        Destroy(bullet, bulletLifeTime);
     }
 }
