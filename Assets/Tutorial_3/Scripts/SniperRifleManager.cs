@@ -13,6 +13,7 @@ public class SniperRifleManager : MonoBehaviour
     float reloadTime = 1f;
 
     [Space]
+    public WindManager windManager;
     public float shootingSpeed;
     public float gravityForce;
     public float bulletLifeTime;
@@ -63,7 +64,7 @@ public class SniperRifleManager : MonoBehaviour
         ParabolicBullet bulletScript = bullet.GetComponent<ParabolicBullet>();
         if (bulletScript)
         {
-            bulletScript.Initialize(shootPoint, shootingSpeed, gravityForce);
+            bulletScript.Initialize(shootPoint, shootingSpeed, gravityForce, windManager.GetWind());
         }
         Destroy(bullet, bulletLifeTime);
     }
