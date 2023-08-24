@@ -2,6 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct HitInfo
+{
+    public RaycastHit hit;
+    public Vector3 hitDirection;
+    public float hitSpeed;
+    public ParabolicBullet bullet;
+    public bool destroyBullet;
+}
+
 public class ParabolicBullet : MonoBehaviour {
 
     private Vector2 wind;
@@ -9,9 +18,7 @@ public class ParabolicBullet : MonoBehaviour {
     private float gravity;
     private Vector3 startPosition;
     private Vector3 startForward;
-
     private bool isInitialized = false;
-
     private float startTime = -1;
 
     public void Initialize(Transform startPoint, float speed, float gravity, Vector2 wind)
@@ -21,6 +28,15 @@ public class ParabolicBullet : MonoBehaviour {
         this.speed = speed;
         this.gravity = gravity;
         this.wind = wind;
+        isInitialized = true;
+        startTime = -1f;
+    }
+
+    public void Reinitialize(Vector3 startPosition, Vector3 startForward, float speed)
+    {
+        this.startPosition = startPosition;
+        this.startForward = startForward;
+        this.speed = speed;
         isInitialized = true;
         startTime = -1f;
     }
@@ -39,14 +55,25 @@ public class ParabolicBullet : MonoBehaviour {
         return Physics.Raycast(startPoint, endPoint - startPoint, out hit, (endPoint - startPoint).magnitude);
     }
 
-    private void OnHit(RaycastHit hit)
+    private void OnHit(RaycastHit hit, Vector3 hitVector)
     {
-        ShootableObject shootableObject = hit.transform.GetComponent<ShootableObject>();
-        if (shootableObject)
+        ShootableObject[] shootableObjects = hit.transform.GetComponents<ShootableObject>();
+        HitInfo hitInfo = new HitInfo
         {
-            shootableObject.OnHit(hit);
+            hit = hit,
+            hitDirection = hitVector.normalized,
+            hitSpeed = (hitVector.magnitude / Time.fixedDeltaTime),
+            bullet = this,
+            destroyBullet = false
+        };
+        foreach (ShootableObject shootableObject in shootableObjects)
+        {
+            shootableObject.OnHit(ref hitInfo);
         }
-        Destroy(gameObject);
+        if (hitInfo.destroyBullet)
+        {
+            Destroy(gameObject);
+        }
     }
 
     private void FixedUpdate()
@@ -66,14 +93,14 @@ public class ParabolicBullet : MonoBehaviour {
             Vector3 prevPoint = FindPointOnParabola(prevTime);
             if (CastRayBetweenPoints(prevPoint, currentPoint, out hit))
             {
-                OnHit(hit);
+                OnHit(hit, (currentPoint - prevPoint));
             }
         }
 
         Vector3 nextPoint = FindPointOnParabola(nextTime);
         if (CastRayBetweenPoints(currentPoint, nextPoint, out hit))
         {
-            OnHit(hit);
+            OnHit(hit, (nextPoint - currentPoint));
         }
     }
 
